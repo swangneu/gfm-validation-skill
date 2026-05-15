@@ -1,0 +1,23 @@
+# MATLAB
+*.asv
+*.m~
+*.mex*
+*.slxc
+*.slx.r*
+*.autosave
+slprj/
+sccprj/
+codegen/
+
+# Sim outputs
+runs/
+test/
+
+# OS/editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~

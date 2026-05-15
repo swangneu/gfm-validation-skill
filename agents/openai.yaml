@@ -1,0 +1,4 @@
+interface:
+  display_name: "GFM Validation"
+  short_description: "Validate GFM Simulink runs against design predictions"
+  default_prompt: "Use $gfm-validation to run Simulink validation scenarios for my GFM model and compare logs against the gfm-design predictions."
