@@ -34,6 +34,7 @@ References are organized by scope. Read essential ones for every validation run;
 | Reference | Purpose |
 |---|---|
 | `references/pre-flight-convention-audit.md` | Pre-`sim()` audit: SPS source-block parameter strings, controller-chart literals, block-swap port topology, baseline regression. Catches `sqrt(2)`/`sqrt(3)` / sign / IC-saddle failures before they look like tuning bugs. |
+| `references/baseline-first-checks.md` | Strip events (locked breakers, disabled programmable variations, bypassed fault blocks), verify the controller block's actual sample time matches the algorithm's hardcoded `dt`, then check steady-state metrics before layering disturbances. |
 | `references/model-logging-contract.md` | Expected signals, units, sign conventions, amplitude cross-check (`|v_inv| ≈ |v_grid|` under `P*=Q*=0`), pre-event settled-window check. |
 | `references/scenario-contract.md` | Scenario classes, pre/post-event windows, what each scenario can and cannot prove. |
 | `references/companion-boundary.md` | Division of responsibility between `gfm-design` and `gfm-validation`. |
