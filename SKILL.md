@@ -38,6 +38,7 @@ References are organized by scope. Read essential ones for every validation run;
 | `references/model-logging-contract.md` | Expected signals, units, sign conventions, amplitude cross-check (`|v_inv| ≈ |v_grid|` under `P*=Q*=0`), pre-event settled-window check. |
 | `references/scenario-contract.md` | Scenario classes, pre/post-event windows, what each scenario can and cannot prove. |
 | `references/companion-boundary.md` | Division of responsibility between `gfm-design` and `gfm-validation`. |
+| `references/common-measurement-pitfalls.md` | Cross-cutting failure patterns that lead to wrong conclusions about the controller: dropped signals after a structural model edit (an edit problem, not a gain problem), measuring power angle at the wrong electrical boundary, moving-average causality around step events, quasi-static back-calculation limits during transients, and a small set of stable MATLAB API traps. Read FIRST when a validation result looks suspicious before retuning anything. |
 
 ### Essential — Tier definitions (cross-reference)
 
@@ -91,4 +92,4 @@ End with:
 3. The report path and any generated run artifacts.
 4. A boundary note: simulation evidence is not grid-code compliance, certification, protection proof, or field qualification.
 
-If the logs disagree with the design prediction, first check signal names/units, steady-state window, limiter activity, saturation, and scenario timing before recommending controller retuning.
+If the logs disagree with the design prediction, first check signal names/units, steady-state window, limiter activity, saturation, and scenario timing before recommending controller retuning. For the recurring failure patterns — near-zero output after a model edit, P-δ steady state stuck at 0°, pre-step operating point showing transient values, missing trajectory discontinuity at grid steps, or unexplained `set_param`/`whos` API errors — read `references/common-measurement-pitfalls.md` first; most of these are mechanical, not physical.
