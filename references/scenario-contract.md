@@ -24,6 +24,17 @@ Use scenarios to collect evidence for one behavior at a time. Each scenario shou
 | `unbalanced_fault` | Check per-phase/sequence limiting assumptions | Requires model-specific signals |
 | `strong_grid_sweep` | Check high-SCR stability and pre-sync assumptions | Repeat across SCR/XR cases |
 
+## Pre-event and post-event windows
+
+For any scenario with a discrete disturbance (`p_ref_step`, `q_ref_step`, `frequency_event`, `voltage_step`, phase jump, breaker close), define **two** comparison windows:
+
+- **Pre-event**: a settled interval ending at the disturbance time. Must be verified settled before its mean is reported — see `model-logging-contract.md` "Pre-disturbance settled-window check".
+- **Post-event**: a settled interval ending at `t_stop`. Must be long enough for the controller's slowest mode to ring down.
+
+If the pre-event window catches a transient (typically because the dVOC's persistent IC is near a saddle, or the stop time before the event was too short), the entire comparison is invalid. Report the pre-event settling status in every scenario that has an event, not just the final pass/fail row.
+
+A "saddle in pre-event" failure looks like a controller mismatch to an unwary reader. It is not — it is a *scenario-windowing* issue and goes back to `$gfm-design` only for the IC sign, not for gain retuning.
+
 ## Fault and LVRT/FRT cases
 
 For fault or LVRT/FRT work, validation must report assumptions rather than claim compliance:

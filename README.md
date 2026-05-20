@@ -6,12 +6,14 @@ A portable [Codex](https://openai.com/codex) / [Claude Code](https://docs.anthro
 
 When invoked, the skill helps you:
 
+- **Audit** the model *before* `sim()`: query the SPS source-block parameter strings (LL RMS vs LL peak), scan controller charts for hardcoded literals, check that block-swap patches are wired correctly (neutral grounds), and verify the IC isn't sitting at a saddle. Catches the $\sqrt{2}$/$\sqrt{3}$/sign-flip family of errors in under a minute, before they masquerade as tuning bugs.
 - **Run** explicit Simulink validation cases with `sim()` only after a model and parameter source exist.
 - **Inspect** existing `Simulink.SimulationOutput`, `logsout`, or exported MATLAB structs without rerunning a model.
 - **Extract** canonical logged signals for real power, reactive power, PCC frequency, PCC voltage, current, and modulation index.
 - **Compare** settled simulation windows against `gfm_predict_steady_state` predictions from `gfm-design`.
 - **Report** pass/fail checks for P/Q/f/V/I/modulation with missing-signal notes and tolerance details.
-- **Frame** nominal, load-step, voltage-step, frequency-event, strong-grid, LVRT/FRT, and fault scenarios without claiming compliance.
+- **Frame** Tier-1 steady-state, Tier-2 small-signal, and Tier-3 large-signal (phase jump, SCR step, LVRT/ZVRT) scenarios — including the pre-event settled-window verification that Tier-3 reports need to be meaningful.
+- **Cross-check** the amplitude invariant `|v_inv| ≈ |v_grid|` under `P*=Q*=0`, with a failure-ratio lookup table that maps observed mismatches ($\sqrt{2}$, $\sqrt{3}$, $\sqrt{3/2}$) to root causes (Phi/Hopf form mismatch, LL/phase swap, LL-RMS/phase-peak swap).
 
 Deliverable is a Markdown validation report plus a MATLAB `result` struct. This skill is the simulation-facing companion to `gfm-design`: use `gfm-design` for first-pass controller design and analytical predictions; use `gfm-validation` once a Simulink model or captured logs exist.
 
@@ -26,13 +28,27 @@ If validation fails, first check signal names, units, comparison windows, limite
 
 ## Coverage
 
-Validation support covered with self-contained scripts and references:
+References are scoped so you only read what your task needs.
+
+**Essential — General (every validation run):**
+
+| Topic | Reference doc |
+|---|---|
+| Pre-`sim()` audit: SPS source-block parameter strings, controller-chart literals, block-swap port topology, baseline regression | [pre-flight-convention-audit.md](references/pre-flight-convention-audit.md) |
+| Expected signals, units, sign conventions, amplitude cross-check (`\|v_inv\| ≈ \|v_grid\|` under `P*=Q*=0`), pre-event settled-window check | [model-logging-contract.md](references/model-logging-contract.md) |
+| Scenario classes, pre/post-event windows, what each scenario can and cannot prove | [scenario-contract.md](references/scenario-contract.md) |
+| Division of responsibility between `gfm-design` and `gfm-validation` | [companion-boundary.md](references/companion-boundary.md) |
+
+**Essential — Tier definitions (cross-reference into `gfm-design`):**
+
+| Topic | Lives in | Use when |
+|---|---|---|
+| Depth-tier scenario matrix: steady-state $\to$ small-signal $\to$ large-signal | [`gfm-design/gfm-test-scenarios.md`](https://github.com/swangneu/gfm-design-skill/blob/main/references/gfm-test-scenarios.md) | Decide whether the scenario is Tier 1, 2, or 3. Linear predictions only apply at Tiers 1–2. |
+
+**Scripts:**
 
 | Area | Purpose | Resource |
 |---|---|---|
-| Companion boundary | Keep design and validation responsibilities separate | [companion-boundary.md](references/companion-boundary.md) |
-| Model logging contract | Expected signal names, units, logging formats, and aliases | [model-logging-contract.md](references/model-logging-contract.md) |
-| Scenario contract | Nominal, step, fault, LVRT/FRT, and strong-grid scenario expectations | [scenario-contract.md](references/scenario-contract.md) |
 | Top-level runner | Run or inspect validation cases | [gfm_validate_sim.m](scripts/gfm_validate_sim.m) |
 | Log extraction | Convert logsout/SimulationOutput/structs into canonical signals | [gfm_extract_sim_signals.m](scripts/gfm_extract_sim_signals.m) |
 | Prediction comparison | Settled-window metrics and tolerance checks | [gfm_compare_logs_to_prediction.m](scripts/gfm_compare_logs_to_prediction.m) |
@@ -145,18 +161,19 @@ result = gfm_validate_sim( ...
 
 ```text
 gfm-validation/
-|-- SKILL.md                         Shared Codex/Claude skill manifest
+|-- SKILL.md                            Shared Codex/Claude skill manifest
 |-- agents/
-|   `-- openai.yaml                  Codex UI metadata
-|-- README.md                        This file
-|-- LICENSE                          MIT
-|-- references/                      Validation workflow notes
-|   |-- companion-boundary.md        Boundary between design and validation
-|   |-- model-logging-contract.md    Signal names, units, aliases, and windows
-|   `-- scenario-contract.md         Scenario classes and claims boundary
-`-- scripts/                         MATLAB validation tooling
-    |-- gfm_validate_sim.m           Run/inspect a validation case
-    |-- gfm_extract_sim_signals.m    Extract canonical P/Q/f/V/I/m signals
+|   `-- openai.yaml                     Codex UI metadata
+|-- README.md                           This file
+|-- LICENSE                             MIT
+|-- references/                         Validation workflow notes
+|   |-- pre-flight-convention-audit.md  Pre-sim() audit: source-block params, chart literals, IC saddles, neutral grounding
+|   |-- model-logging-contract.md       Signal names, units, amplitude cross-check, pre-event settled-window check
+|   |-- scenario-contract.md            Scenario classes, pre/post-event windows, claims boundary
+|   `-- companion-boundary.md           Boundary between design and validation
+`-- scripts/                            MATLAB validation tooling
+    |-- gfm_validate_sim.m              Run/inspect a validation case
+    |-- gfm_extract_sim_signals.m       Extract canonical P/Q/f/V/I/m signals
     |-- gfm_compare_logs_to_prediction.m
     |-- gfm_write_validation_report.m
     `-- test_gfm_validation_helpers.m

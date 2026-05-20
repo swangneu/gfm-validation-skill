@@ -17,27 +17,42 @@ Keep the boundary sharp:
 ## Workflow
 
 1. Confirm the validation target: model name/path, parameter source, scenario, stop time, and whether the user wants a live `sim()` run or analysis of existing `Simulink.SimulationOutput`/logs.
-2. Load the model contract before running: read `references/model-logging-contract.md` when signal names, logging, or `logsout` are unclear.
-3. Use `Simulink.SimulationInput` for live runs. Set `p` from the provided `gfm_params` source, apply the scenario, and call `sim()` without saving or structurally editing the model unless the user asks.
-4. Extract logged signals: P, Q, PCC frequency, PCC voltage, current, and modulation index when available.
-5. Compare the settled simulation window against `gfm_predict_steady_state` or a supplied prediction. Treat current limiting, modulation saturation, missing logs, and fault periods as validation findings, not tuning results.
-6. Write artifacts under `runs/` or another ignored output directory. Do not claim grid-code or protection compliance; report simulation evidence only.
+2. **Run the pre-flight convention audit** before `sim()`: read `references/pre-flight-convention-audit.md`, query SPS source-block parameters, scan controller chart for hardcoded literals, verify the IC is not at a saddle. Most "wrong amplitude" / "doesn't settle" reports trace back to issues this audit catches in under a minute.
+3. Identify which depth tier the scenario lives in (steady-state, small-signal, large-signal) — see `gfm-design/references/gfm-test-scenarios.md`. Tier-1 amplitude/sign sanity checks apply to every run; small-signal `gfm_smallsignal` comparisons apply only at Tier 2; pre-event settled-window verification matters most at Tier 3.
+4. Load the model logging contract before running: read `references/model-logging-contract.md` when signal names, logging, or `logsout` are unclear.
+5. Use `Simulink.SimulationInput` for live runs. Set `p` from the provided `gfm_params` source, apply the scenario, and call `sim()` without saving or structurally editing the model unless the user asks.
+6. Extract logged signals: P, Q, PCC frequency, PCC voltage, current, and modulation index when available.
+7. Compare the settled simulation window against `gfm_predict_steady_state` or a supplied prediction. Treat current limiting, modulation saturation, missing logs, and fault periods as validation findings, not tuning results.
+8. Write artifacts under `runs/` or another ignored output directory. Do not claim grid-code or protection compliance; report simulation evidence only.
 
-## Resource Map
+## Resource map
 
-Scripts:
+References are organized by scope. Read essential ones for every validation run; read plus ones only when the scenario calls for them.
 
-- `scripts/gfm_validate_sim.m`: top-level runner. Accepts a model or existing sim output, resolves parameters/prediction, extracts logs, compares metrics, and writes a report.
-- `scripts/gfm_extract_sim_signals.m`: extracts canonical signals from `logsout`, `SimulationOutput`, or simple structs.
-- `scripts/gfm_compare_logs_to_prediction.m`: computes settled-window metrics and pass/fail checks against a prediction.
-- `scripts/gfm_write_validation_report.m`: writes a concise Markdown validation report.
-- `scripts/test_gfm_validation_helpers.m`: smoke test for helper scripts using synthetic logs; does not call `sim()`.
+### Essential — General (every validation run)
 
-References:
+| Reference | Purpose |
+|---|---|
+| `references/pre-flight-convention-audit.md` | Pre-`sim()` audit: SPS source-block parameter strings, controller-chart literals, block-swap port topology, baseline regression. Catches `sqrt(2)`/`sqrt(3)` / sign / IC-saddle failures before they look like tuning bugs. |
+| `references/model-logging-contract.md` | Expected signals, units, sign conventions, amplitude cross-check (`|v_inv| ≈ |v_grid|` under `P*=Q*=0`), pre-event settled-window check. |
+| `references/scenario-contract.md` | Scenario classes, pre/post-event windows, what each scenario can and cannot prove. |
+| `references/companion-boundary.md` | Division of responsibility between `gfm-design` and `gfm-validation`. |
 
-- `references/companion-boundary.md`: division of responsibility between `gfm-design` and `gfm-validation`.
-- `references/model-logging-contract.md`: expected model signals, names, units, and logging conventions.
-- `references/scenario-contract.md`: scenario classes and what each can and cannot prove.
+### Essential — Tier definitions (cross-reference)
+
+| Reference | Lives in | Use when |
+|---|---|---|
+| `gfm-test-scenarios.md` | `gfm-design` | Decide whether the scenario is Tier 1 (steady-state), Tier 2 (small-signal), or Tier 3 (large-signal). Linear predictions only apply at Tiers 1–2. |
+
+### Scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/gfm_validate_sim.m` | Top-level runner. Accepts a model or existing sim output, resolves parameters/prediction, extracts logs, compares metrics, and writes a report. |
+| `scripts/gfm_extract_sim_signals.m` | Extracts canonical signals from `logsout`, `SimulationOutput`, or simple structs. |
+| `scripts/gfm_compare_logs_to_prediction.m` | Computes settled-window metrics and pass/fail checks against a prediction. |
+| `scripts/gfm_write_validation_report.m` | Writes a concise Markdown validation report. |
+| `scripts/test_gfm_validation_helpers.m` | Smoke test for helper scripts using synthetic logs; does not call `sim()`. |
 
 ## Minimal Usage
 
