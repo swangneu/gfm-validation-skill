@@ -6,6 +6,16 @@ dip, fault), validate that the model settles to a correct steady state with
 event handled correctly". Skipping the baseline lets time-step, sign, and
 scaling bugs hide in the event response.
 
+> **Sequencing vs. the pre-flight audit.** Run this *after* the static
+> `pre-flight-convention-audit.md` passes. Pre-flight reads the model without
+> running it (source-block params, chart text, ports); this step runs the
+> model with events stripped to confirm it actually settles. The two are
+> complementary, not redundant: pre-flight catches mis-wired conventions,
+> this catches a correctly wired controller that still won't reach the right
+> steady state. And unlike pre-flight's *regression* check (a diff against a
+> previously saved snapshot), this is a first-principles check — no prior
+> reference run is needed.
+
 ## Step 1 - strip events from the model
 
 Disable every scenario element for the baseline run:

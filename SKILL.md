@@ -17,13 +17,14 @@ Keep the boundary sharp:
 ## Workflow
 
 1. Confirm the validation target: model name/path, parameter source, scenario, stop time, and whether the user wants a live `sim()` run or analysis of existing `Simulink.SimulationOutput`/logs.
-2. **Run the pre-flight convention audit** before `sim()`: read `references/pre-flight-convention-audit.md`, query SPS source-block parameters, scan controller chart for hardcoded literals, verify the IC is not at a saddle. Most "wrong amplitude" / "doesn't settle" reports trace back to issues this audit catches in under a minute.
+2. **Run the pre-flight convention audit** before `sim()`: read `references/pre-flight-convention-audit.md`, query SPS source-block parameters, scan controller chart for hardcoded literals, verify the IC is not at a saddle. This is a *static* inspection — it reads the model without running it. Most "wrong amplitude" / "doesn't settle" reports trace back to issues this audit catches in under a minute.
 3. Identify which depth tier the scenario lives in (steady-state, small-signal, large-signal) — see `gfm-design/references/gfm-test-scenarios.md`. Tier-1 amplitude/sign sanity checks apply to every run; small-signal `gfm_smallsignal` comparisons apply only at Tier 2; pre-event settled-window verification matters most at Tier 3.
 4. Load the model logging contract before running: read `references/model-logging-contract.md` when signal names, logging, or `logsout` are unclear.
-5. Use `Simulink.SimulationInput` for live runs. Set `p` from the provided `gfm_params` source, apply the scenario, and call `sim()` without saving or structurally editing the model unless the user asks.
-6. Extract logged signals: P, Q, PCC frequency, PCC voltage, current, and modulation index when available.
-7. Compare the settled simulation window against `gfm_predict_steady_state` or a supplied prediction. Treat current limiting, modulation saturation, missing logs, and fault periods as validation findings, not tuning results.
-8. Write artifacts under `runs/` or another ignored output directory. Do not claim grid-code or protection compliance; report simulation evidence only.
+5. **Run the no-event baseline before layering any disturbance**: read `references/baseline-first-checks.md`. Strip scenario events (lock breakers closed, disable programmable variations, bypass fault blocks), confirm the controller block's sample time matches the algorithm's hardcoded `dt`, and verify the model settles to a correct steady state. This is the *dynamic* counterpart to step 2 — it separates "is the controller doing its job" from "is the event handled correctly." A baseline that does not settle invalidates every event-response conclusion built on top of it.
+6. Use `Simulink.SimulationInput` for live runs. Set `p` from the provided `gfm_params` source, apply the scenario, and call `sim()` without saving or structurally editing the model unless the user asks.
+7. Extract logged signals: P, Q, PCC frequency, PCC voltage, current, and modulation index when available.
+8. Compare the settled simulation window against `gfm_predict_steady_state` or a supplied prediction. Treat current limiting, modulation saturation, missing logs, and fault periods as validation findings, not tuning results.
+9. Write artifacts under `runs/` or another ignored output directory. Do not claim grid-code or protection compliance; report simulation evidence only.
 
 ## Resource map
 

@@ -92,6 +92,8 @@ If the model was rebuilt from scratch instead of cloned, also check that the Uni
 
 If the patched model started life as a copy of a verified baseline, run the baseline's known-good scenario (no scenario events, default parameters) and confirm the report still matches what the baseline produced. If you broke something during patching, this catches it before the new-scenario sim mucks up the diagnosis.
 
+This is a *regression* check: it applies only when you already have a saved known-good snapshot. For first-principles steady-state correctness when no snapshot exists — confirming the controller settles to the physically correct operating point at all, with events stripped — use `baseline-first-checks.md`.
+
 ```matlab
 % Save a snapshot of the pristine baseline's settled output for comparison
 ref = load('runs/baseline_steady_state_reference.mat');

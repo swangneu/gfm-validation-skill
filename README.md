@@ -34,10 +34,12 @@ References are scoped so you only read what your task needs.
 
 | Topic | Reference doc |
 |---|---|
-| Pre-`sim()` audit: SPS source-block parameter strings, controller-chart literals, block-swap port topology, baseline regression | [pre-flight-convention-audit.md](references/pre-flight-convention-audit.md) |
+| Pre-`sim()` static audit: SPS source-block parameter strings, controller-chart literals, block-swap port topology, regression vs. a saved snapshot | [pre-flight-convention-audit.md](references/pre-flight-convention-audit.md) |
+| No-event baseline run: strip events, confirm the controller sample time matches the algorithm `dt`, verify steady state before layering disturbances | [baseline-first-checks.md](references/baseline-first-checks.md) |
 | Expected signals, units, sign conventions, amplitude cross-check (`\|v_inv\| ≈ \|v_grid\|` under `P*=Q*=0`), pre-event settled-window check | [model-logging-contract.md](references/model-logging-contract.md) |
 | Scenario classes, pre/post-event windows, what each scenario can and cannot prove | [scenario-contract.md](references/scenario-contract.md) |
 | Division of responsibility between `gfm-design` and `gfm-validation` | [companion-boundary.md](references/companion-boundary.md) |
+| Cross-cutting measurement/plotting traps that mimic tuning bugs (dropped signals after a model edit, power-angle measured at the wrong boundary, causal vs. centered `movmean`, quasi-static back-calc limits, MATLAB API traps) — read before retuning | [common-measurement-pitfalls.md](references/common-measurement-pitfalls.md) |
 
 **Essential — Tier definitions (cross-reference into `gfm-design`):**
 
@@ -167,9 +169,11 @@ gfm-validation/
 |-- README.md                           This file
 |-- LICENSE                             MIT
 |-- references/                         Validation workflow notes
-|   |-- pre-flight-convention-audit.md  Pre-sim() audit: source-block params, chart literals, IC saddles, neutral grounding
+|   |-- pre-flight-convention-audit.md  Static pre-sim() audit: source-block params, chart literals, IC saddles, neutral grounding
+|   |-- baseline-first-checks.md        No-event baseline run: strip events, controller sample-time check, steady-state verify
 |   |-- model-logging-contract.md       Signal names, units, amplitude cross-check, pre-event settled-window check
 |   |-- scenario-contract.md            Scenario classes, pre/post-event windows, claims boundary
+|   |-- common-measurement-pitfalls.md  Measurement/plotting traps that mimic tuning bugs (read before retuning)
 |   `-- companion-boundary.md           Boundary between design and validation
 `-- scripts/                            MATLAB validation tooling
     |-- gfm_validate_sim.m              Run/inspect a validation case
